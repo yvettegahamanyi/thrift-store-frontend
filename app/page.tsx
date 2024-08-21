@@ -134,7 +134,9 @@ export default function Home() {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <span className="i-heroicons-ellipsis-horizontal-16-solid"></span>
+              <div>
+                <span className="i-heroicons-ellipsis-horizontal-16-solid"></span>
+              </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56">
               <DropdownMenuRadioGroup>
