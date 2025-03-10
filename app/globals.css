@@ -67,3 +67,9 @@
     @apply bg-background text-foreground;
   }
 }
+/* 
+@media screen and (min-width: 320px) {
+  .getTheApp {
+    background: green;
+  }
+} */
