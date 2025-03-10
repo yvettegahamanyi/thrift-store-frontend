@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
-import { Payment } from "@/app/page";
+import { Payment } from "@/app/dashboard/page";
 
 type PaymentStore = {
   payments: Payment[];
