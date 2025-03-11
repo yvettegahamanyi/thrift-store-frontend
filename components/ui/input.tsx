@@ -1,24 +1,22 @@
-import React, { forwardRef } from "react";
+import * as React from "react"
 
-export const Input = forwardRef<
-  HTMLInputElement,
-  { label?: string; placeholder: string; type: string; name: string }
->(function Input({ label, placeholder, name, type, ...props }, ref) {
-  return (
-    <div className="my-4">
-      {label && (
-        <label className="block mb-2 text-base text-gray-900">{label}</label>
-      )}
+import { cn } from "@/lib/utils"
+
+const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+  ({ className, type, ...props }, ref) => {
+    return (
       <input
-        className="block w-full p-4 text-gray-900 border border-gray-300 rounded-lg bg-white text-base focus:bg-white"
-        placeholder={placeholder}
         type={type}
-        name={name}
-        ref={ref} // Forward the ref to the input element
+        className={cn(
+          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+          className
+        )}
+        ref={ref}
         {...props}
       />
-    </div>
-  );
-});
+    )
+  }
+)
+Input.displayName = "Input"
 
-export default Input;
+export { Input }
