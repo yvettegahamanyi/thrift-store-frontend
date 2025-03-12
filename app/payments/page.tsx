@@ -14,6 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { TableToolbar } from "@/components/data-table/table-toolbar";
 import { TablePagination } from "@/components/data-table/table-pagination";
 import { TableActions } from "@/components/data-table/table-actions";
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { Payment } from "@/types/payment";
+import { TableComponent } from "@/components/data-table/table";
 
 const PaymentsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,7 +28,7 @@ const PaymentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterValue, setFilterValue] = useState("all");
 
-  const mockPayments = [
+  const mockPayments: Payment[] = [
     {
       id: "PAY-001",
       date: "2023-05-12",
@@ -58,7 +65,7 @@ const PaymentsPage = () => {
       id: "PAY-005",
       date: "2023-05-03",
       amount: 19.99,
-      status: "Pending",
+      status: "Failed",
       method: "Bank Transfer",
       orderId: "ORD-7308",
     },
@@ -79,6 +86,62 @@ const PaymentsPage = () => {
       orderId: "ORD-7306",
     },
   ];
+
+  const [rowSelection, setRowSelection] = useState({});
+  const columnHelper = createColumnHelper<Payment>();
+
+  const columns = [
+    columnHelper.accessor("id", {
+      header: "Id",
+    }),
+    columnHelper.accessor("date", {
+      header: "Date",
+    }),
+    columnHelper.accessor("orderId", {
+      header: "Order ID",
+    }),
+    columnHelper.accessor("amount", {
+      header: "Amount",
+    }),
+    columnHelper.accessor("method", {
+      header: "Method",
+    }),
+    columnHelper.accessor("status", {
+      header: "Status",
+      cell: (info) => (
+        <Badge
+          className={getStatusColor(info.row.original.status)}
+          variant="outline"
+        >
+          {info.row.original.status}
+        </Badge>
+      ),
+    }),
+    columnHelper.display({
+      id: "actions",
+      header: () => "Actions",
+      cell: (info) => (
+        <TableActions
+          onView={() => handleViewPayment(info.row.original)}
+          actionType="order"
+        />
+      ),
+    }),
+  ];
+
+  const table = useReactTable({
+    data: mockPayments,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    onRowSelectionChange: (newRowSelection) => {
+      if (JSON.stringify(newRowSelection) !== JSON.stringify(rowSelection)) {
+        setRowSelection(newRowSelection);
+      }
+    },
+    state: {
+      rowSelection,
+    },
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -158,52 +221,7 @@ const PaymentsPage = () => {
             placeholderText="Search payments..."
           />
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Payment ID</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[80px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedPayments.length > 0 ? (
-                paginatedPayments.map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell className="font-medium">{payment.id}</TableCell>
-                    <TableCell>{payment.date}</TableCell>
-                    <TableCell>{payment.orderId}</TableCell>
-                    <TableCell>${payment.amount.toFixed(2)}</TableCell>
-                    <TableCell>{payment.method}</TableCell>
-                    <TableCell>
-                      <Badge
-                        className={getStatusColor(payment.status)}
-                        variant="outline"
-                      >
-                        {payment.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <TableActions
-                        onView={() => handleViewPayment(payment)}
-                        actionType="order"
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    No results found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <TableComponent table={table} />
 
           <TablePagination
             totalItems={filteredPayments.length}

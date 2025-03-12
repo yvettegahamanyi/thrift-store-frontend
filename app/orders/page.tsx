@@ -1,23 +1,79 @@
 "use client";
-import { useState, useContext } from "react";
+import { useState } from "react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { TableToolbar } from "@/components/data-table/table-toolbar";
 import { TablePagination } from "@/components/data-table/table-pagination";
 import { TableActions } from "@/components/data-table/table-actions";
 import OrderDetailsModal from "@/components/modals/OrderDetailsModal";
 import UpdateOrderStatusModal from "@/components/modals/UpdateOrderStatusModal";
-import CheckoutPhoneModal from "@/components/modals/CheckoutPhoneModal";
-import { Button } from "@/components/ui/button";
+import { TableComponent } from "@/components/data-table/table";
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { Order } from "@/types/orders";
+
+const mockOrders: Order[] = [
+  {
+    id: "ORD-7312",
+    date: "2023-05-12",
+    items: 3,
+    total: 75.97,
+    status: "Processing",
+    customer: "Jane Smith",
+  },
+  {
+    id: "ORD-7311",
+    date: "2023-05-10",
+    items: 1,
+    total: 29.99,
+    status: "Shipped",
+    customer: "John Doe",
+  },
+  {
+    id: "ORD-7310",
+    date: "2023-05-08",
+    items: 2,
+    total: 45.98,
+    status: "Delivered",
+    customer: "Robert Johnson",
+  },
+  {
+    id: "ORD-7309",
+    date: "2023-05-05",
+    items: 4,
+    total: 89.96,
+    status: "Delivered",
+    customer: "Sarah Williams",
+  },
+  {
+    id: "ORD-7308",
+    date: "2023-05-03",
+    items: 1,
+    total: 19.99,
+    status: "Delivered",
+    customer: "Michael Brown",
+  },
+  {
+    id: "ORD-7307",
+    date: "2023-05-02",
+    items: 2,
+    total: 34.98,
+    status: "Processing",
+    customer: "Emily Davis",
+  },
+  {
+    id: "ORD-7306",
+    date: "2023-05-01",
+    items: 3,
+    total: 59.97,
+    status: "Shipped",
+    customer: "Daniel Wilson",
+  },
+];
 
 const OrdersPage = () => {
   //   const { user } = useContext(AuthContext);
@@ -33,65 +89,64 @@ const OrdersPage = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false);
+  const [rowSelection, setRowSelection] = useState({});
+  const columnHelper = createColumnHelper<Order>();
 
-  const mockOrders = [
-    {
-      id: "ORD-7312",
-      date: "2023-05-12",
-      items: 3,
-      total: 75.97,
-      status: "Processing",
-      customer: "Jane Smith",
-    },
-    {
-      id: "ORD-7311",
-      date: "2023-05-10",
-      items: 1,
-      total: 29.99,
-      status: "Shipped",
-      customer: "John Doe",
-    },
-    {
-      id: "ORD-7310",
-      date: "2023-05-08",
-      items: 2,
-      total: 45.98,
-      status: "Delivered",
-      customer: "Robert Johnson",
-    },
-    {
-      id: "ORD-7309",
-      date: "2023-05-05",
-      items: 4,
-      total: 89.96,
-      status: "Delivered",
-      customer: "Sarah Williams",
-    },
-    {
-      id: "ORD-7308",
-      date: "2023-05-03",
-      items: 1,
-      total: 19.99,
-      status: "Delivered",
-      customer: "Michael Brown",
-    },
-    {
-      id: "ORD-7307",
-      date: "2023-05-02",
-      items: 2,
-      total: 34.98,
-      status: "Processing",
-      customer: "Emily Davis",
-    },
-    {
-      id: "ORD-7306",
-      date: "2023-05-01",
-      items: 3,
-      total: 59.97,
-      status: "Shipped",
-      customer: "Daniel Wilson",
-    },
+  const columns = [
+    columnHelper.accessor("id", {
+      header: "Id",
+    }),
+    columnHelper.accessor("date", {
+      header: "Date",
+    }),
+    columnHelper.accessor("customer", {
+      header: "Customer",
+    }),
+    columnHelper.accessor("items", {
+      header: "Items",
+    }),
+    columnHelper.accessor("total", {
+      header: "Total",
+    }),
+    columnHelper.accessor("status", {
+      header: "Status",
+      cell: (info) => (
+        <Badge
+          className={getStatusColor(info.row.original.status)}
+          variant="outline"
+        >
+          {info.row.original.status}
+        </Badge>
+      ),
+    }),
+    columnHelper.display({
+      id: "actions",
+      header: () => "Actions",
+      cell: (info) => (
+        <TableActions
+          onView={() => handleViewOrder(info.row.original)}
+          onEdit={
+            isAdmin ? () => handleUpdateStatus(info.row.original) : undefined
+          }
+          actionType="order"
+        />
+      ),
+    }),
   ];
+
+  const table = useReactTable({
+    data: mockOrders,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    onRowSelectionChange: (newRowSelection) => {
+      if (JSON.stringify(newRowSelection) !== JSON.stringify(rowSelection)) {
+        setRowSelection(newRowSelection);
+      }
+    },
+    state: {
+      rowSelection,
+    },
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -170,58 +225,7 @@ const OrdersPage = () => {
             placeholderText="Search orders..."
           />
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Date</TableHead>
-                {isAdmin && <TableHead>Customer</TableHead>}
-                <TableHead>Items</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[80px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedOrders.length > 0 ? (
-                paginatedOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell>{order.date}</TableCell>
-                    {isAdmin && <TableCell>{order.customer}</TableCell>}
-                    <TableCell>{order.items}</TableCell>
-                    <TableCell>${order.total.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Badge
-                        className={getStatusColor(order.status)}
-                        variant="outline"
-                      >
-                        {order.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <TableActions
-                        onView={() => handleViewOrder(order)}
-                        onEdit={
-                          isAdmin ? () => handleUpdateStatus(order) : undefined
-                        }
-                        actionType="order"
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={isAdmin ? 7 : 6}
-                    className="h-24 text-center"
-                  >
-                    No results found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <TableComponent table={table} />
 
           <TablePagination
             totalItems={filteredOrders.length}

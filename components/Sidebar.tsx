@@ -64,6 +64,17 @@ const Sidebar = () => {
           <span>Orders</span>
         </Link>
         <Link
+          href="/payments"
+          className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent ${
+            pathname == "/payments"
+              ? "bg-accent text-accent-foreground"
+              : "text-muted-foreground"
+          }`}
+        >
+          <span className="i-heroicons-banknotes w-5 h-5"></span>
+          <span>Payment</span>
+        </Link>
+        <Link
           href="/donations"
           className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent ${
             pathname == "/donations"
@@ -74,6 +85,7 @@ const Sidebar = () => {
           <Gift size={18} />
           <span>Donations</span>
         </Link>
+
         {user?.role === "admin" && (
           <Link
             href="/users"

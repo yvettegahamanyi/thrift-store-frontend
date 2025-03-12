@@ -69,54 +69,6 @@ const CustomerDashboard = () => {
         </div>
       </div>
 
-      {/* <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Trending</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Jacket</p>
-                <p className="text-sm text-muted-foreground">
-                  Very fashionable ladies jacket
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium">$22.00</p>
-                <p className="text-xs text-muted-foreground">$12.53</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">Sweater</p>
-                <p className="text-sm text-muted-foreground">
-                  Provide warmth and typically
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium">$24.21</p>
-                <p className="text-xs text-muted-foreground">$12.53</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">White</p>
-                <p className="text-sm text-muted-foreground">
-                  Stylish warmth and comfortable
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium">$21.42</p>
-                <p className="text-xs text-muted-foreground">$12.53</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div> */}
-
       <h2 className="mt-10 text-2xl font-semibold">New Arrival</h2>
       <div className="mt-6 flex flex-col">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">

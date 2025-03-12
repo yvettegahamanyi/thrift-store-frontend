@@ -2,20 +2,84 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TableToolbar } from "@/components/data-table/table-toolbar";
 import { TablePagination } from "@/components/data-table/table-pagination";
-import { TableActions } from "@/components/data-table/table-actions";
 import DonationApprovalModal from "@/components/modals/DonationApprovalModal";
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { Donation } from "@/types/donations";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+} from "@/components/ui/dropdown-menu";
+import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import { TableComponent } from "@/components/data-table/table";
+import { Badge } from "@/components/ui/badge";
+import { TableActions } from "@/components/data-table/table-actions";
+const mockDonations: Donation[] = [
+  {
+    id: "DON-1234",
+    date: "2023-05-15",
+    itemName: "Winter Coat",
+    category: "Outerwear",
+    status: "Pending",
+    donor: "Jane Smith",
+  },
+  {
+    id: "DON-1233",
+    date: "2023-05-14",
+    itemName: "Denim Jeans",
+    category: "Pants",
+    status: "Approved",
+    donor: "John Doe",
+  },
+  {
+    id: "DON-1232",
+    date: "2023-05-12",
+    itemName: "Formal Shirts (3)",
+    category: "Shirts",
+    status: "Pending",
+    donor: "Robert Johnson",
+  },
+  {
+    id: "DON-1231",
+    date: "2023-05-10",
+    itemName: "Summer Dresses",
+    category: "Dresses",
+    status: "Approved",
+    donor: "Sarah Williams",
+  },
+  {
+    id: "DON-1230",
+    date: "2023-05-08",
+    itemName: "Knit Sweaters (2)",
+    category: "Knitwear",
+    status: "Rejected",
+    donor: "Michael Brown",
+  },
+  {
+    id: "DON-1229",
+    date: "2023-05-07",
+    itemName: "Canvas Shoes",
+    category: "Footwear",
+    status: "Pending",
+    donor: "Emily Davis",
+  },
+  {
+    id: "DON-1228",
+    date: "2023-05-05",
+    itemName: "Leather Belts",
+    category: "Accessories",
+    status: "Approved",
+    donor: "Daniel Wilson",
+  },
+];
 
 const DonationsPage = () => {
   //   const { user } = useContext(AuthContext);
@@ -30,65 +94,71 @@ const DonationsPage = () => {
   const [selectedDonation, setSelectedDonation] = useState<any>(null);
   const [actionType, setActionType] = useState<"approve" | "reject">("approve");
   const [isApproveRejectOpen, setIsApproveRejectOpen] = useState(false);
+  const [rowSelection, setRowSelection] = useState({});
+  const columnHelper = createColumnHelper<Donation>();
 
-  const mockDonations = [
-    {
-      id: "DON-1234",
-      date: "2023-05-15",
-      itemName: "Winter Coat",
-      category: "Outerwear",
-      status: "Pending",
-      donor: "Jane Smith",
-    },
-    {
-      id: "DON-1233",
-      date: "2023-05-14",
-      itemName: "Denim Jeans",
-      category: "Pants",
-      status: "Approved",
-      donor: "John Doe",
-    },
-    {
-      id: "DON-1232",
-      date: "2023-05-12",
-      itemName: "Formal Shirts (3)",
-      category: "Shirts",
-      status: "Listed",
-      donor: "Robert Johnson",
-    },
-    {
-      id: "DON-1231",
-      date: "2023-05-10",
-      itemName: "Summer Dresses",
-      category: "Dresses",
-      status: "Sold",
-      donor: "Sarah Williams",
-    },
-    {
-      id: "DON-1230",
-      date: "2023-05-08",
-      itemName: "Knit Sweaters (2)",
-      category: "Knitwear",
-      status: "Rejected",
-      donor: "Michael Brown",
-    },
-    {
-      id: "DON-1229",
-      date: "2023-05-07",
-      itemName: "Canvas Shoes",
-      category: "Footwear",
-      status: "Pending",
-      donor: "Emily Davis",
-    },
-    {
-      id: "DON-1228",
-      date: "2023-05-05",
-      itemName: "Leather Belts",
-      category: "Accessories",
-      status: "Approved",
-      donor: "Daniel Wilson",
-    },
+  const columns = [
+    columnHelper.accessor("id", {
+      header: "Id",
+    }),
+    columnHelper.accessor("date", {
+      header: "Date",
+    }),
+    columnHelper.accessor("itemName", {
+      header: "Item",
+    }),
+    columnHelper.accessor("donor", {
+      header: "Donor",
+    }),
+    columnHelper.accessor("category", {
+      header: "Category",
+    }),
+    columnHelper.accessor("status", {
+      header: "Status",
+      cell: (info) => (
+        <Badge
+          className={getStatusColor(info.row.original.status)}
+          variant="outline"
+        >
+          {info.row.original.status}
+        </Badge>
+      ),
+    }),
+    columnHelper.display({
+      id: "actions",
+      header: () => "Actions",
+      cell: (info) => (
+        <TableActions
+          onApprove={() => {
+            setSelectedDonation(info.row.original);
+            setActionType("approve");
+            setIsApproveRejectOpen(true);
+          }}
+          onReject={() => {
+            setSelectedDonation(info.row.original);
+            setActionType("reject");
+            setIsApproveRejectOpen(true);
+          }}
+          isPending={info.row.original.status === "Pending"}
+          actionType="donation"
+        />
+      ),
+    }),
   ];
+
+  const table = useReactTable({
+    data: mockDonations,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    onRowSelectionChange: (newRowSelection) => {
+      if (JSON.stringify(newRowSelection) !== JSON.stringify(rowSelection)) {
+        setRowSelection(newRowSelection);
+      }
+    },
+    state: {
+      rowSelection,
+    },
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -170,65 +240,7 @@ const DonationsPage = () => {
             placeholderText="Search donations..."
           />
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Date</TableHead>
-                {isAdmin && <TableHead>Donor</TableHead>}
-                <TableHead>Item</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[80px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedDonations.length > 0 ? (
-                paginatedDonations.map((donation) => (
-                  <TableRow key={donation.id}>
-                    <TableCell className="font-medium">{donation.id}</TableCell>
-                    <TableCell>{donation.date}</TableCell>
-                    {isAdmin && <TableCell>{donation.donor}</TableCell>}
-                    <TableCell>{donation.itemName}</TableCell>
-                    <TableCell>{donation.category}</TableCell>
-                    <TableCell>
-                      <Badge
-                        className={getStatusColor(donation.status)}
-                        variant="outline"
-                      >
-                        {donation.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <TableActions
-                        onView={() => alert(`View details for ${donation.id}`)}
-                        onApprove={() => {
-                          setIsApproveRejectOpen(true);
-                          setSelectedDonation(donation);
-                        }}
-                        onReject={() => {
-                          setIsApproveRejectOpen(true);
-                          setSelectedDonation(donation);
-                          setActionType("reject");
-                        }}
-                        isPending={donation.status === "Pending"}
-                        actionType="donation"
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={isAdmin ? 7 : 6}
-                    className="h-24 text-center"
-                  >
-                    No results found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+          <TableComponent table={table} />
 
           <TablePagination
             totalItems={filteredDonations.length}
