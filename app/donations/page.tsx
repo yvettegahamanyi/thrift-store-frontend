@@ -12,13 +12,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Donation } from "@/types/donations";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuRadioGroup,
-} from "@/components/ui/dropdown-menu";
-import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import { TableComponent } from "@/components/data-table/table";
 import { Badge } from "@/components/ui/badge";
 import { TableActions } from "@/components/data-table/table-actions";
