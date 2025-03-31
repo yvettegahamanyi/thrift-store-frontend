@@ -1,13 +1,21 @@
-
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-
+import { DonationSchema, DonationType } from "@/types/donations";
+import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "@/lib/axios";
+import { zodResolver } from "@hookform/resolvers/zod";
 interface DonationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -15,63 +23,66 @@ interface DonationModalProps {
   donation?: any;
 }
 
-const DonationModal = ({ isOpen, onClose, mode, donation }: DonationModalProps) => {
+const DonationModal = ({
+  isOpen,
+  onClose,
+  mode,
+  donation,
+}: DonationModalProps) => {
   const { toast } = useToast();
   const isViewMode = mode === "view";
-  
-  const [formData, setFormData] = useState({
-    title: donation?.title || "",
-    category: donation?.category || "",
-    condition: donation?.condition || "Good",
-    description: donation?.description || "",
-    pickupAddress: donation?.pickupAddress || "",
-    pickupDate: donation?.pickupDate || "",
+  const queryClient = useQueryClient();
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<DonationType>({
+    resolver: zodResolver(DonationSchema),
+    defaultValues: {
+      title: donation?.title || "",
+      description: donation?.description || "",
+      pickupAddress: donation?.pickupAddress || "",
+      pickupDate: donation?.pickupDate || "",
+    },
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    if (isViewMode) return;
-    
-    const { id, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [id]: value
-    }));
-  };
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: any) => {
+      return api.post("/donation", data);
+    },
+    onSuccess(response) {
+      queryClient.invalidateQueries({
+        queryKey: ["donation"],
+      });
+      toast({
+        title: "Donation Submitted",
+        description: "Your donation has been submitted for review",
+      });
+      onClose();
+    },
+    onError(error: any) {
+      console.log(error);
+      toast({
+        title: "Create Donation failed",
+        description:
+          error?.response?.data?.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+      onClose();
+    },
+  });
 
-  const handleSelectChange = (id: string, value: string) => {
-    if (isViewMode) return;
-    
-    setFormData(prev => ({
-      ...prev,
-      [id]: value
-    }));
-  };
-
-  const handleSubmit = () => {
+  console.log(errors);
+  const onSubmit = (data: DonationType) => {
     if (isViewMode) {
       onClose();
       return;
     }
-    
-    // Validate form
-    if (!formData.title || !formData.category || !formData.condition) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // In a real app, this would create the donation in the database
-    console.log("Creating donation:", formData);
-    
-    toast({
-      title: "Donation Submitted",
-      description: "Your donation has been submitted for review",
-    });
-    
-    onClose();
+
+    mutate(data);
   };
 
   return (
@@ -82,130 +93,91 @@ const DonationModal = ({ isOpen, onClose, mode, donation }: DonationModalProps) 
             {isViewMode ? "Donation Details" : "Create Donation"}
           </DialogTitle>
         </DialogHeader>
-        
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Item Name <span className="text-red-500">*</span></Label>
+              <Label htmlFor="title">
+                Item Title <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="Item name"
+                value={watch("title")}
+                {...register("title")}
+                placeholder="Item title"
                 readOnly={isViewMode}
               />
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="category">Category <span className="text-red-500">*</span></Label>
-              <Select 
-                value={formData.category} 
-                onValueChange={(value) => handleSelectChange("category", value)}
-                disabled={isViewMode}
-              >
-                <SelectTrigger id="category">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Jacket">Jacket</SelectItem>
-                  <SelectItem value="Sweater">Sweater</SelectItem>
-                  <SelectItem value="Dress">Dress</SelectItem>
-                  <SelectItem value="Shirt">Shirt</SelectItem>
-                  <SelectItem value="Accessories">Accessories</SelectItem>
-                  <SelectItem value="Coat">Coat</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={watch("description")}
+                {...register("description")}
+                placeholder="Item description"
+                rows={4}
+                readOnly={isViewMode}
+              />
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="condition">Condition <span className="text-red-500">*</span></Label>
-            <Select 
-              value={formData.condition} 
-              onValueChange={(value) => handleSelectChange("condition", value)}
-              disabled={isViewMode}
-            >
-              <SelectTrigger id="condition">
-                <SelectValue placeholder="Select condition" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="New">New (with tags)</SelectItem>
-                <SelectItem value="Like New">Like New</SelectItem>
-                <SelectItem value="Good">Good</SelectItem>
-                <SelectItem value="Fair">Fair</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Item description"
-              rows={4}
-              readOnly={isViewMode}
-            />
-          </div>
-          
-          {!isViewMode && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="pickupAddress">Pickup Address</Label>
-                <Input
-                  id="pickupAddress"
-                  value={formData.pickupAddress}
-                  onChange={handleChange}
-                  placeholder="Address for item pickup"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="pickupDate">Preferred Pickup Date</Label>
-                <Input
-                  id="pickupDate"
-                  type="date"
-                  value={formData.pickupDate}
-                  onChange={handleChange}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Item Photos</Label>
-                <div className="border-2 border-dashed rounded-md p-6 text-center cursor-pointer hover:bg-muted/50">
+
+            {!isViewMode && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="pickupAddress">Pickup Address</Label>
+                  <Input
+                    id="pickupAddress"
+                    value={watch("pickupAddress")}
+                    {...register("pickupAddress")}
+                    placeholder="Address for item pickup"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="pickupDate">Preferred Pickup Date</Label>
+                  <Input
+                    id="pickupDate"
+                    type="date"
+                    {...register("pickupDate")}
+                    value={watch("pickupDate")}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Item Photos</Label>
+                  <div className="border-2 border-dashed rounded-md p-6 text-center cursor-pointer hover:bg-muted/50">
+                    <p className="text-sm text-muted-foreground">
+                      Drag and drop images or click to browse
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {isViewMode && donation?.status && (
+              <div className="mt-2 p-3 bg-muted rounded-md">
+                <p className="font-medium">Status: {donation.status}</p>
+                {donation.statusDate && (
                   <p className="text-sm text-muted-foreground">
-                    Drag and drop images or click to browse
+                    Updated: {donation.statusDate}
                   </p>
-                </div>
+                )}
+                {donation.notes && (
+                  <div className="mt-2">
+                    <p className="font-medium">Admin Notes:</p>
+                    <p className="text-sm">{donation.notes}</p>
+                  </div>
+                )}
               </div>
-            </>
-          )}
-          
-          {isViewMode && donation?.status && (
-            <div className="mt-2 p-3 bg-muted rounded-md">
-              <p className="font-medium">Status: {donation.status}</p>
-              {donation.statusDate && (
-                <p className="text-sm text-muted-foreground">Updated: {donation.statusDate}</p>
-              )}
-              {donation.notes && (
-                <div className="mt-2">
-                  <p className="font-medium">Admin Notes:</p>
-                  <p className="text-sm">{donation.notes}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            {isViewMode ? "Close" : "Cancel"}
-          </Button>
-          {!isViewMode && (
-            <Button onClick={handleSubmit}>Submit Donation</Button>
-          )}
-        </DialogFooter>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose}>
+              {isViewMode ? "Close" : "Cancel"}
+            </Button>
+            {!isViewMode && <Button type="submit">Submit Donation</Button>}
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

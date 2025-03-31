@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/authStore";
 
 const DashboardHeader = () => {
-  // const { user } = useContext(AuthContext);
-  const user = { name: "John Doe" };
+  const { user } = useAuthStore();
   const router = useRouter();
   const getInitials = (name: string) => {
     return name
@@ -37,7 +37,9 @@ const DashboardHeader = () => {
         >
           <Avatar>
             <AvatarFallback className="bg-primary text-primary-foreground">
-              {user?.name ? getInitials(user.name) : "U"}
+              {user?.firstName
+                ? getInitials(`${user.firstName} ${user.lastName}`)
+                : "U"}
             </AvatarFallback>
           </Avatar>
         </Button>

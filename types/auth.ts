@@ -4,11 +4,35 @@ export type LoginPayload = {
 };
 
 export type signUpPayload = {
-  names: string;
+  firstName: string;
+  lastName: string;
   province: string;
   district: string;
   email: string;
   password: string;
   confirmPassword: string;
-  role: "customer" | "donor" | "admin";
+  role: Role;
+};
+
+export enum Role {
+  CUSTOMER = "CUSTOMER",
+  DONOR = "DONOR",
+  ADMIN = "ADMIN",
+}
+
+export enum UserStatus {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+}
+
+export type User = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: Role;
+  addaddress: string;
+  phoneNumber: string;
+  createdAt: string;
+  status: UserStatus;
 };

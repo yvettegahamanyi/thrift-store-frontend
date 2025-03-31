@@ -11,74 +11,19 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Donation } from "@/types/donations";
+import { Donation, DonationStatus } from "@/types/donations";
 import { TableComponent } from "@/components/data-table/table";
 import { Badge } from "@/components/ui/badge";
 import { TableActions } from "@/components/data-table/table-actions";
-const mockDonations: Donation[] = [
-  {
-    id: "DON-1234",
-    date: "2023-05-15",
-    itemName: "Winter Coat",
-    category: "Outerwear",
-    status: "Pending",
-    donor: "Jane Smith",
-  },
-  {
-    id: "DON-1233",
-    date: "2023-05-14",
-    itemName: "Denim Jeans",
-    category: "Pants",
-    status: "Approved",
-    donor: "John Doe",
-  },
-  {
-    id: "DON-1232",
-    date: "2023-05-12",
-    itemName: "Formal Shirts (3)",
-    category: "Shirts",
-    status: "Pending",
-    donor: "Robert Johnson",
-  },
-  {
-    id: "DON-1231",
-    date: "2023-05-10",
-    itemName: "Summer Dresses",
-    category: "Dresses",
-    status: "Approved",
-    donor: "Sarah Williams",
-  },
-  {
-    id: "DON-1230",
-    date: "2023-05-08",
-    itemName: "Knit Sweaters (2)",
-    category: "Knitwear",
-    status: "Rejected",
-    donor: "Michael Brown",
-  },
-  {
-    id: "DON-1229",
-    date: "2023-05-07",
-    itemName: "Canvas Shoes",
-    category: "Footwear",
-    status: "Pending",
-    donor: "Emily Davis",
-  },
-  {
-    id: "DON-1228",
-    date: "2023-05-05",
-    itemName: "Leather Belts",
-    category: "Accessories",
-    status: "Approved",
-    donor: "Daniel Wilson",
-  },
-];
+import { useAuthStore } from "@/store/authStore";
+import { Role } from "@/types/auth";
+import { useGetDonations } from "@/service/donation";
+import DonationModal from "@/components/modals/DonationModal";
 
 const DonationsPage = () => {
-  //   const { user } = useContext(AuthContext);
-  const user = { role: "admin" };
-  const isAdmin = user?.role === "admin";
-  const isDonor = user?.role === "donor";
+  const user = useAuthStore((state) => state.user);
+  const isAdmin = user?.role === Role.ADMIN;
+  const isDonor = user?.role === Role.DONOR;
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -89,21 +34,23 @@ const DonationsPage = () => {
   const [isApproveRejectOpen, setIsApproveRejectOpen] = useState(false);
   const [rowSelection, setRowSelection] = useState({});
   const columnHelper = createColumnHelper<Donation>();
+  const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
 
+  const { data, isLoading } = useGetDonations();
   const columns = [
     columnHelper.accessor("id", {
       header: "Id",
     }),
-    columnHelper.accessor("date", {
+    columnHelper.accessor("pickupAddress", {
       header: "Date",
     }),
-    columnHelper.accessor("itemName", {
+    columnHelper.accessor("title", {
       header: "Item",
     }),
     columnHelper.accessor("donor", {
       header: "Donor",
     }),
-    columnHelper.accessor("category", {
+    columnHelper.accessor("description", {
       header: "Category",
     }),
     columnHelper.accessor("status", {
@@ -132,7 +79,7 @@ const DonationsPage = () => {
             setActionType("reject");
             setIsApproveRejectOpen(true);
           }}
-          isPending={info.row.original.status === "Pending"}
+          isPending={info.row.original.status === DonationStatus.PENDING}
           actionType="donation"
         />
       ),
@@ -140,7 +87,7 @@ const DonationsPage = () => {
   ];
 
   const table = useReactTable({
-    data: mockDonations,
+    data: data || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
     onRowSelectionChange: (newRowSelection) => {
@@ -170,29 +117,6 @@ const DonationsPage = () => {
     }
   };
 
-  const filteredDonations = mockDonations.filter((donation) => {
-    if (filterValue && donation.status !== filterValue) {
-      return false;
-    }
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return (
-        donation.id.toLowerCase().includes(query) ||
-        donation.itemName.toLowerCase().includes(query) ||
-        donation.category.toLowerCase().includes(query) ||
-        donation.donor.toLowerCase().includes(query)
-      );
-    }
-
-    return true;
-  });
-
-  const paginatedDonations = filteredDonations.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
   const handleDownload = () => {
     console.log("Downloading donations data...");
     alert("Donations data download started");
@@ -220,7 +144,11 @@ const DonationsPage = () => {
               : "See how donated items make a difference"}
           </p>
         </div>
-        {isDonor && <Button>Donate Item</Button>}
+        {isDonor && (
+          <Button onClick={() => setIsDonationModalOpen(true)}>
+            Donate Item
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -235,13 +163,13 @@ const DonationsPage = () => {
 
           <TableComponent table={table} />
 
-          <TablePagination
-            totalItems={filteredDonations.length}
+          {/* <TablePagination
+            totalItems={filteredDonations?.length as number}
             pageSize={pageSize}
             currentPage={currentPage}
             onPageChange={setCurrentPage}
             onPageSizeChange={setPageSize}
-          />
+          /> */}
         </CardContent>
       </Card>
 
@@ -250,6 +178,11 @@ const DonationsPage = () => {
         onClose={() => setIsApproveRejectOpen(false)}
         donation={selectedDonation}
         type={actionType}
+      />
+      <DonationModal
+        isOpen={isDonationModalOpen}
+        onClose={() => setIsDonationModalOpen(false)}
+        mode="create"
       />
     </DashboardLayout>
   );

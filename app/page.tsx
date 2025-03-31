@@ -12,14 +12,16 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "@/hooks/use-toast";
 import { LoginPayload } from "@/types/auth";
+import { useMutation } from "@tanstack/react-query";
+import api from "@/lib/axios";
+import { useAuthStore } from "@/store/authStore";
 
 export default function Home() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const { setUser, setToken } = useAuthStore();
   const {
     register,
     handleSubmit,
@@ -27,27 +29,33 @@ export default function Home() {
     formState: { errors },
   } = useForm<LoginPayload>();
 
-  const onSubmit: SubmitHandler<LoginPayload> = (data) => {
-    setIsLoading(true);
-
-    try {
-      // Simulate API call delay
-      // await new Promise(resolve => setTimeout(resolve, 1000));
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: any) => {
+      return api.post("/signin", data);
+    },
+    onSuccess(response) {
+      console.log(response);
+      setToken(response.data.access_token);
 
       toast({
         title: "Login successful",
         description: "Welcome back to ThriftStore!",
       });
       router.push("/dashboard");
-    } catch (error) {
+    },
+    onError(error: any) {
+      console.log(error);
       toast({
         title: "Login failed",
-        description: "Please check your credentials and try again.",
+        description:
+          error?.response?.data?.message || "An unexpected error occurred",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
-    }
+    },
+  });
+
+  const onSubmit: SubmitHandler<LoginPayload> = (data) => {
+    mutate(data);
   };
 
   return (
@@ -82,8 +90,8 @@ export default function Home() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Logging in..." : "Login"}
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? "Logging in..." : "Login"}
             </Button>
           </form>
         </CardContent>

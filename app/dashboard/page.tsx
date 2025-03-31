@@ -10,6 +10,10 @@ import {
 } from "@/components/ui/card";
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import Link from "next/link";
+import { useGetCurrentUser } from "@/service/auth";
+import { useEffect } from "react";
+import { useAuthStore } from "@/store/authStore";
+import { Role } from "@/types/auth";
 
 const CustomerDashboard = () => {
   const mockProducts = [
@@ -269,13 +273,28 @@ const AdminDashboard = () => (
 );
 
 const Dashboard = () => {
-  // const { user } = useContext(AuthContext);
-  const user = { role: "admin" };
+  const { data, isLoading } = useGetCurrentUser();
+  const { setUser, user } = useAuthStore();
+  // console.log(user);
+  useEffect(() => {
+    setUser(data);
+  }, [data]);
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-primary"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
-      {user.role === "admin" ? (
+      {user?.role == Role.ADMIN ? (
         <AdminDashboard />
-      ) : user.role === "donor" ? (
+      ) : user?.role == Role.DONOR ? (
         <DonorDashboard />
       ) : (
         <CustomerDashboard />

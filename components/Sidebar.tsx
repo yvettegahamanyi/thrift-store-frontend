@@ -11,15 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuthStore } from "@/store/authStore";
+import { Role } from "@/types/auth";
 
 const Sidebar = () => {
-  // const { user, logout } = useContext(AuthContext);
-  // const navigate = useNavigate();
   const router = useRouter();
   const pathname = usePathname();
-  const user = { name: "John Doe", role: "admin" };
+  const { logout, user } = useAuthStore();
   const handleLogout = () => {
-    // logout();
+    logout();
     router.push("/");
   };
 
@@ -86,7 +86,7 @@ const Sidebar = () => {
           <span>Donations</span>
         </Link>
 
-        {user?.role === "admin" && (
+        {user?.role === Role.ADMIN && (
           <Link
             href="/users"
             className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent ${
@@ -104,7 +104,9 @@ const Sidebar = () => {
         <Separator className="mb-4" />
         <div className="flex items-center justify-between px-4">
           <div>
-            <p className="text-sm font-medium">{user?.name}</p>
+            <p className="text-sm font-medium">
+              {user?.firstName + " " + user?.lastName}
+            </p>
             <p className="text-xs text-muted-foreground capitalize">
               {user?.role}
             </p>
