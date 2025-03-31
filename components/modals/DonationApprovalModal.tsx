@@ -11,6 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { CheckCircle, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "@/lib/axios";
+import { DonationStatus } from "@/types/donations";
 
 interface DonationApprovalModalProps {
   isOpen: boolean;
@@ -30,29 +33,43 @@ const DonationApprovalModal = ({
   const [estimatedValue, setEstimatedValue] = useState(
     donation?.estimatedValue ? donation.estimatedValue.toString() : ""
   );
-
-  if (!donation) return null;
+  const queryClient = useQueryClient();
+  const { mutate, isPending } = useMutation({
+    mutationFn: () => {
+      return api.put(`/donation/${donation?.id}`, {
+        status:
+          type === "approve"
+            ? DonationStatus.APPROVED
+            : DonationStatus.REJECTED,
+      });
+    },
+    onSuccess(response) {
+      queryClient.invalidateQueries({
+        queryKey: ["donations"],
+      });
+      toast({
+        title: type === "approve" ? "Donation Approved" : "Donation Rejected",
+        description: `${donation.title} has been ${
+          type === "approve" ? "approved" : "rejected"
+        }.`,
+      });
+      onClose();
+    },
+    onError(error: any) {
+      console.log(error);
+      toast({
+        title: type == "approve" ? "Approve failed" : "Reject failed",
+        description:
+          error?.response?.data?.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleSubmit = () => {
-    // In a real app, this would approve/reject the donation in the database
-    console.log(
-      `${type === "approve" ? "Approving" : "Rejecting"} donation:`,
-      donation.id
-    );
-    console.log("Notes:", notes);
-
-    if (type === "approve") {
-      console.log("Estimated Value:", estimatedValue);
-    }
-
-    toast({
-      title: type === "approve" ? "Donation Approved" : "Donation Rejected",
-      description: `${donation.title} has been ${
-        type === "approve" ? "approved" : "rejected"
-      }.`,
-    });
-    onClose();
+    mutate();
   };
+  if (!donation) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -112,7 +129,6 @@ const DonationApprovalModal = ({
           <Button
             onClick={handleSubmit}
             variant={type === "approve" ? "default" : "destructive"}
-            disabled={type === "reject" && !notes.trim()}
           >
             {type === "approve" ? "Approve" : "Reject"}
           </Button>

@@ -55,7 +55,7 @@ const DonationModal = ({
     },
     onSuccess(response) {
       queryClient.invalidateQueries({
-        queryKey: ["donation"],
+        queryKey: ["donations"],
       });
       toast({
         title: "Donation Submitted",

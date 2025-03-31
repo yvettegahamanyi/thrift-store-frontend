@@ -38,9 +38,6 @@ const DonationsPage = () => {
 
   const { data, isLoading } = useGetDonations();
   const columns = [
-    columnHelper.accessor("id", {
-      header: "Id",
-    }),
     columnHelper.accessor("pickupAddress", {
       header: "Date",
     }),
@@ -49,6 +46,12 @@ const DonationsPage = () => {
     }),
     columnHelper.accessor("donor", {
       header: "Donor",
+      cell: (info) => (
+        <span>
+          {info.row.original.donor?.firstName}{" "}
+          {info.row.original.donor?.lastName}
+        </span>
+      ),
     }),
     columnHelper.accessor("description", {
       header: "Category",
@@ -102,15 +105,15 @@ const DonationsPage = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Pending":
+      case DonationStatus.PENDING:
         return "bg-yellow-100 text-yellow-800";
-      case "Approved":
+      case DonationStatus.APPROVED:
         return "bg-blue-100 text-blue-800";
       case "Listed":
         return "bg-indigo-100 text-indigo-800";
       case "Sold":
         return "bg-green-100 text-green-800";
-      case "Rejected":
+      case DonationStatus.REJECTED:
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";

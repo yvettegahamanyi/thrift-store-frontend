@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useGetDonations = () => {
   return useQuery<Donation[], Error>({
-    queryKey: ["donation"],
+    queryKey: ["donations"],
     queryFn: async () =>
       await api.get("/donation").then((res) => res.data.data),
   });
