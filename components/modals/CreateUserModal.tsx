@@ -23,12 +23,12 @@ import api from "@/lib/axios";
 import { useForm } from "react-hook-form";
 import { userSchema, UserType } from "@/types/user";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Role } from "@/types/auth";
+import { Role, User } from "@/types/auth";
 
 interface UserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user?: any;
+  user?: User;
   mode: "create" | "edit";
 }
 
@@ -53,7 +53,7 @@ const CreateUserModal = ({ isOpen, onClose, user, mode }: UserModalProps) => {
     },
   });
 
-  const { mutate } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: (data: any) => {
       return api.post(`/user/create`, data);
     },
@@ -62,9 +62,33 @@ const CreateUserModal = ({ isOpen, onClose, user, mode }: UserModalProps) => {
         queryKey: ["users"],
       });
       toast({
-        description: `${response.data.firstName || "User"} has been ${
-          mode === "create" ? "Created" : "Edited"
-        }.`,
+        description: `${response.data.firstName || "User"} has been Created.`,
+        variant: "success",
+      });
+      onClose();
+    },
+    onError(error: any) {
+      toast({
+        description:
+          error?.response?.data?.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const { mutate: update, isPending: isUpdatePending } = useMutation({
+    mutationFn: (data: any) => {
+      return api.put(`/user/${user?.id}`, data);
+    },
+    onSuccess(response) {
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [user?.id],
+      });
+      toast({
+        description: `${response.data.firstName || "User"} has been edited.`,
         variant: "success",
       });
       onClose();
@@ -84,11 +108,10 @@ const CreateUserModal = ({ isOpen, onClose, user, mode }: UserModalProps) => {
 
   const onSubmit = (data: UserType) => {
     // Validate form
-    mutate(data);
+    if (mode === "create") mutate(data);
+    else update(data);
     onClose();
   };
-
-  console.log(watch("status") === "ACTIVE");
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

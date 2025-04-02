@@ -41,16 +41,16 @@ const DonationsPage = () => {
   const { data, isLoading } = useGetDonations();
   const columns = [
     columnHelper.accessor("pickupAddress", {
-      header: "Date",
+      header: "Pickup Address",
     }),
     columnHelper.accessor("title", {
-      header: "Item",
+      header: "Item Name",
     }),
     columnHelper.accessor("donor", {
       header: "Donor",
       cell: (info) => (
         <span>
-          {info.row.original.donor?.firstName}{" "}
+          {info.row.original.donor?.firstName}
           {info.row.original.donor?.lastName}
         </span>
       ),
@@ -132,6 +132,16 @@ const DonationsPage = () => {
     { value: "Approved", label: "Approved" },
     { value: "Rejected", label: "Rejected" },
   ];
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+          <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

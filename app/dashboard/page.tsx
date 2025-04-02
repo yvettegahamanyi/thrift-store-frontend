@@ -19,6 +19,7 @@ import { useGetProducts } from "@/service/product";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { toast } from "@/hooks/use-toast";
+import { useGetDonorStats, useGetUsersStats } from "@/service/user";
 
 const CustomerDashboard = () => {
   const { data, isLoading } = useGetProducts();
@@ -103,6 +104,16 @@ const CustomerDashboard = () => {
 
 const DonorDashboard = () => {
   const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
+  const { data, isLoading } = useGetDonorStats();
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+          <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
   return (
     <>
       <div className="mb-8">
@@ -112,16 +123,16 @@ const DonorDashboard = () => {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-4">
         <Card>
           <CardHeader>
-            <CardTitle>Total Donations</CardTitle>
-            <CardDescription>
+            <CardTitle>Pending Donations</CardTitle>
+            {/* <CardDescription>
               Your contribution makes a difference
-            </CardDescription>
+            </CardDescription> */}
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">12</p>
+            <p className="text-4xl font-bold">{data?.pendingDonation}</p>
             <p className="text-sm text-muted-foreground">
               Items donated to date
             </p>
@@ -129,12 +140,22 @@ const DonorDashboard = () => {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Approved Items</CardTitle>
-            <CardDescription>Items processed and listed</CardDescription>
+            <CardTitle>Approved Donations</CardTitle>
+            {/* <CardDescription>Items processed and listed</CardDescription> */}
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">9</p>
-            <p className="text-sm text-muted-foreground">83% approval rate</p>
+            <p className="text-4xl font-bold">{data?.approvedDonation}</p>
+            {/* <p className="text-sm text-muted-foreground">83% approval rate</p> */}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Total Products</CardTitle>
+            <CardDescription>Products created from donations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold">{data?.totalProducts}</p>
+            {/* <p className="text-sm text-muted-foreground">83% approval rate</p> */}
           </CardContent>
         </Card>
         <Card>
@@ -143,10 +164,10 @@ const DonorDashboard = () => {
             <CardDescription>Carbon footprint reduced</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">45kg</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-4xl font-bold">{data?.carbonFootprintKg}kg</p>
+            {/* <p className="text-sm text-muted-foreground">
               CO₂ saved by reusing
-            </p>
+            </p> */}
           </CardContent>
         </Card>
       </div>
@@ -165,55 +186,72 @@ const DonorDashboard = () => {
   );
 };
 
-const AdminDashboard = () => (
-  <>
-    <div className="mb-8">
-      <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-      <p className="text-muted-foreground">
-        Manage store operations and monitor metrics
-      </p>
-    </div>
+const AdminDashboard = () => {
+  const { data, isLoading } = useGetUsersStats();
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+          <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
-    <div className="grid gap-6 md:grid-cols-4">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Total Products</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-4xl font-bold">128</p>
-          {/* <p className="text-sm text-muted-foreground">+4 this week</p> */}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Pending Donations</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-4xl font-bold">15</p>
-          <p className="text-sm text-muted-foreground">6 Needs review</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Active Orders</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-4xl font-bold">24</p>
-          <p className="text-sm text-muted-foreground">6 pending shipment</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Revenue</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-4xl font-bold">$3,240</p>
-          <p className="text-sm text-muted-foreground">This month</p>
-        </CardContent>
-      </Card>
-    </div>
+  console.log(data?.productInStock);
+  return (
+    <>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <p className="text-muted-foreground">
+          Manage store operations and monitor metrics
+        </p>
+      </div>
 
-    <div className="mt-8 grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Total Products</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold">{data?.productInStock}</p>
+            {/* <p className="text-sm text-muted-foreground">+4 this week</p> */}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Pending Donations</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold">{data?.pendingDonation}</p>
+            <p className="text-sm text-muted-foreground">
+              Needs to be reviewed
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Active Orders</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold">{data?.PendingShipment}</p>
+            <p className="text-sm text-muted-foreground">
+              they are pending for shipment
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Revenue</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold">{data?.totalRevenue}Rwf</p>
+            {/* <p className="text-sm text-muted-foreground">This month</p> */}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* <div className="mt-8 grid gap-6 md:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle>Recent Donations</CardTitle>
@@ -280,9 +318,10 @@ const AdminDashboard = () => (
           </div>
         </CardContent>
       </Card>
-    </div>
-  </>
-);
+    </div> */}
+    </>
+  );
+};
 
 const Dashboard = () => {
   const { data, isLoading } = useGetCurrentUser();

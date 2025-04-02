@@ -73,11 +73,7 @@ const OrdersPage = () => {
       cell: (info) => (
         <TableActions
           onView={() => handleViewOrder(info.row.original)}
-          onEdit={
-            user?.role == Role.ADMIN
-              ? () => handleUpdateStatus(info.row.original)
-              : undefined
-          }
+          onEdit={() => handleUpdateStatus(info.row.original)}
           actionType="order"
         />
       ),

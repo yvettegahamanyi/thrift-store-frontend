@@ -21,7 +21,7 @@ import CreateUserModal from "@/components/modals/CreateUserModal";
 const UsersPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterValue, setFilterValue] = useState("");
-  const { data, isLoading } = useGetUsers();
+  const { data, isLoading } = useGetUsers(searchQuery);
   const [rowSelection, setRowSelection] = useState({});
   const columnHelper = createColumnHelper<User>();
   const [actionType, setActionType] = useState<"activate" | "deactivate">(
@@ -70,7 +70,7 @@ const UsersPage = () => {
       ),
     }),
     columnHelper.accessor("createdAt", {
-      header: "Category",
+      header: "Created At",
       cell: (info) => new Date(info.row.original.createdAt).toDateString(),
     }),
     columnHelper.accessor("status", {
@@ -136,6 +136,18 @@ const UsersPage = () => {
         return "bg-gray-100 text-gray-800";
     }
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+          <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  console.log(searchQuery);
 
   return (
     <DashboardLayout>

@@ -88,13 +88,12 @@ const ProductModal = ({
     },
     onSuccess(response) {
       queryClient.invalidateQueries({
-        queryKey: ["product-id"],
+        queryKey: ["products"],
       });
       toast({
         title: "Product Updated",
         description: `${response.data.data.name} has been updated successfully`,
       });
-
       onClose();
     },
     onError(error: any) {

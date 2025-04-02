@@ -26,6 +26,13 @@ import { TableActions } from "@/components/data-table/table-actions";
 import { useParams } from "next/navigation";
 import { useGetDonationById } from "@/service/donation";
 import { DonationStatus } from "@/types/donations";
+import { Product } from "@/types/product";
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { TableComponent } from "@/components/data-table/table";
 
 export default function DonationDetailsPage() {
   const { id } = useParams() as { id: string };
@@ -33,44 +40,10 @@ export default function DonationDetailsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const { data, isLoading } = useGetDonationById(id);
-
-  // // Mock fetch donation details
-  //   useEffect(() => {
-  //     // Simulate API call to fetch donation details
-  //     setTimeout(() => {
-  //       // This would be replaced with an actual API call
-  //       const mockDonation = {
-  //         id: id || "DON-1234",
-  //         date: "2023-05-15",
-  //         itemName: "Winter Coat",
-  //         category: "Outerwear",
-  //         status: "Approved",
-  //         donor: "Jane Smith",
-  //         description:
-  //           "A high-quality winter coat in excellent condition. Suitable for cold weather.",
-  //         condition: "Like New",
-  //         notes:
-  //           "This is a premium item that would work well for our winter collection.",
-  //         imageUrl: "/placeholder.svg",
-  //       };
-  //       setDonation(mockDonation);
-
-  //       // Mock products created from this donation
-  //       const mockProducts = [
-  //         {
-  //           id: "PROD-5678",
-  //           name: "Designer Winter Coat",
-  //           category: "Outerwear",
-  //           price: 49.99,
-  //           status: "Active",
-  //           createdAt: "2023-05-16",
-  //           imageUrl: "/placeholder.svg",
-  //         },
-  //       ];
-  //       setProducts(mockProducts);
-  //       setIsLoading(false);
-  //     }, 1000);
-  //   }, [id]);
+  const [selectedProduct, setSelectedProduct] = useState<Product>();
+  const [mode, setMode] = useState<"create" | "edit">("create");
+  const columnHelper = createColumnHelper<Product>();
+  const [rowSelection, setRowSelection] = useState({});
 
   const getStatusColor = (status: DonationStatus) => {
     switch (status) {
@@ -87,15 +60,56 @@ export default function DonationDetailsPage() {
 
   const handleCreateProduct = () => {
     setIsProductModalOpen(true);
+    setMode("create");
   };
 
-  const handleProductCreated = (product: any) => {
-    setProducts((prev) => [...prev, product]);
-    toast({
-      title: "Product Created",
-      description: `Product "${product.name}" has been created successfully.`,
-    });
-  };
+  const columns = [
+    columnHelper.accessor("name", {
+      header: "Name",
+    }),
+    columnHelper.accessor("description", {
+      header: "Description",
+    }),
+    columnHelper.accessor("price", {
+      header: "Price(RWF)",
+    }),
+    columnHelper.accessor("isActive", {
+      header: "Status",
+      cell: (info) => (
+        <Badge variant={info.row.original.isActive ? "default" : "outline"}>
+          {info.row.original.isActive ? "Active" : "De-active"}
+        </Badge>
+      ),
+    }),
+    columnHelper.display({
+      id: "actions",
+      header: () => "Actions",
+      cell: (info) => (
+        <TableActions
+          onEdit={() => {
+            setIsProductModalOpen(true);
+            setSelectedProduct(info.row.original);
+            setMode("edit");
+          }}
+          actionType="product"
+        />
+      ),
+    }),
+  ];
+
+  const table = useReactTable({
+    data: data?.products || [],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    onRowSelectionChange: (newRowSelection) => {
+      if (JSON.stringify(newRowSelection) !== JSON.stringify(rowSelection)) {
+        setRowSelection(newRowSelection);
+      }
+    },
+    state: {
+      rowSelection,
+    },
+  });
 
   if (isLoading) {
     return (
@@ -113,7 +127,9 @@ export default function DonationDetailsPage() {
         <div className="text-center py-10">
           <h2 className="text-2xl font-bold mb-2">Donation Not Found</h2>
           <p className="text-muted-foreground">
-            The donation you're looking for doesn't exist or has been removed.
+            {
+              "The donation you're looking for doesn't exist or has been removed."
+            }
           </p>
         </div>
       </DashboardLayout>
@@ -230,46 +246,7 @@ export default function DonationDetailsPage() {
         <Card>
           <CardContent className="p-6">
             {data?.products?.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created At</TableHead>
-                    <TableHead className="w-[80px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data?.products?.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-medium">
-                        {product.id}
-                      </TableCell>
-                      <TableCell>{product.name}</TableCell>
-                      <TableCell>{product.description}</TableCell>
-                      <TableCell>${product.price}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={product.isActive ? "default" : "outline"}
-                        >
-                          {product.isActive ? "Active" : "De-active"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{product.createdAt.split("T")[0]}</TableCell>
-                      <TableCell>
-                        <TableActions
-                          onView={() => alert(`View details for ${product.id}`)}
-                          onEdit={() => alert(`Edit product ${product.id}`)}
-                          actionType="product"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <TableComponent table={table} />
             ) : (
               <div className="text-center py-10">
                 <CheckCircle className="mx-auto h-12 w-12 text-muted-foreground/60" />
@@ -301,7 +278,8 @@ export default function DonationDetailsPage() {
       <ProductModal
         isOpen={isProductModalOpen}
         onClose={() => setIsProductModalOpen(false)}
-        mode={"create"}
+        product={selectedProduct}
+        mode={mode}
       />
     </DashboardLayout>
   );

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { CheckCircle, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/types/auth";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 
 interface UserModalProps {
@@ -22,15 +22,17 @@ interface UserModalProps {
 
 const UserModal = ({ isOpen, onClose, user, type }: UserModalProps) => {
   const { toast } = useToast();
-
-  console.log(user);
+  const queryClient = useQueryClient();
   const { mutate, isPending } = useMutation({
     mutationFn: (data: any) => {
       return api.put(`/user/${user?.id}`, data);
     },
     onSuccess(response) {
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
       toast({
-        title: type === "activate" ? "User Activated" : "User Deactivated",
+        // title: type === "activate" ? "User Activated" : "User Deactivated",
         description: `${user.firstName} has been ${
           type === "activate" ? "activated" : "deactivated"
         }.`,
@@ -40,7 +42,7 @@ const UserModal = ({ isOpen, onClose, user, type }: UserModalProps) => {
     onError(error: any) {
       console.log(error);
       toast({
-        title: type == "activate" ? "Activate failed" : "Deactivate failed",
+        // title: type == "activate" ? "Activate failed" : "Deactivate failed",
         description:
           error?.response?.data?.message || "An unexpected error occurred",
         variant: "destructive",
@@ -49,7 +51,7 @@ const UserModal = ({ isOpen, onClose, user, type }: UserModalProps) => {
   });
 
   const handleSubmit = () => {
-    mutate({ active: type === "activate" });
+    mutate({ status: type === "activate" ? "ACTIVE" : "INACTIVE" });
   };
 
   return (

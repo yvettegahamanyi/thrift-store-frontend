@@ -74,6 +74,16 @@ const ProductsPage = () => {
     },
   });
 
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+          <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="mb-8 flex justify-between items-center">
@@ -122,14 +132,14 @@ const ProductsPage = () => {
                     >
                       Approve
                     </Button> */}
-                  <Button
+                  {/* <Button
                     variant="outline"
                     size="sm"
                     className="bg-red-50 hover:bg-red-100 text-red-600"
                     onClick={() => handleRejectProduct(product)}
                   >
                     Deactivate
-                  </Button>
+                  </Button> */}
                   {/* </div> */}
                 </>
               ) : (
