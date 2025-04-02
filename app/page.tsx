@@ -102,7 +102,7 @@ export default function Home() {
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
             Do not have an account?
-            <Link href={"/signup"} className="text-primary hover:underline">
+            <Link href={"/register"} className="text-primary hover:underline">
               Sign up
             </Link>
           </p>

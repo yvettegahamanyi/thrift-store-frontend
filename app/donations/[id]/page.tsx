@@ -126,11 +126,11 @@ export default function DonationDetailsPage() {
       <DashboardLayout>
         <div className="text-center py-10">
           <h2 className="text-2xl font-bold mb-2">Donation Not Found</h2>
-          <p className="text-muted-foreground">
-            {
-              "The donation you're looking for doesn't exist or has been removed."
-            }
-          </p>
+          {/* <p className="text-muted-foreground">
+            
+              The donation you're looking for doesn't exist or has been removed.
+            
+          </p> */}
         </div>
       </DashboardLayout>
     );
