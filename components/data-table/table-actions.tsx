@@ -88,23 +88,20 @@ export function TableActions({
         {(onApprove || onReject) && (
           <>
             {/* <DropdownMenuSeparator /> */}
-            {status === DonationStatus.PENDING ||
-              (status === DonationStatus.REJECTED && (
-                <DropdownMenuItem
-                  onClick={onApprove}
-                  className="text-green-600"
-                >
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Approve
-                </DropdownMenuItem>
-              ))}
-            {status === DonationStatus.PENDING ||
-              (status === DonationStatus.APPROVED && (
-                <DropdownMenuItem onClick={onReject} className="text-red-600">
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Reject
-                </DropdownMenuItem>
-              ))}
+            {(status === DonationStatus.PENDING ||
+              status === DonationStatus.REJECTED) && (
+              <DropdownMenuItem onClick={onApprove} className="text-green-600">
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Approve
+              </DropdownMenuItem>
+            )}
+            {(status === DonationStatus.PENDING ||
+              status === DonationStatus.APPROVED) && (
+              <DropdownMenuItem onClick={onReject} className="text-red-600">
+                <XCircle className="mr-2 h-4 w-4" />
+                Reject
+              </DropdownMenuItem>
+            )}
           </>
         )}
 
