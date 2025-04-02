@@ -15,76 +15,18 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Order } from "@/types/orders";
-
-const mockOrders: Order[] = [
-  {
-    id: "ORD-7312",
-    date: "2023-05-12",
-    items: 3,
-    total: 75.97,
-    status: "Processing",
-    customer: "Jane Smith",
-  },
-  {
-    id: "ORD-7311",
-    date: "2023-05-10",
-    items: 1,
-    total: 29.99,
-    status: "Shipped",
-    customer: "John Doe",
-  },
-  {
-    id: "ORD-7310",
-    date: "2023-05-08",
-    items: 2,
-    total: 45.98,
-    status: "Delivered",
-    customer: "Robert Johnson",
-  },
-  {
-    id: "ORD-7309",
-    date: "2023-05-05",
-    items: 4,
-    total: 89.96,
-    status: "Delivered",
-    customer: "Sarah Williams",
-  },
-  {
-    id: "ORD-7308",
-    date: "2023-05-03",
-    items: 1,
-    total: 19.99,
-    status: "Delivered",
-    customer: "Michael Brown",
-  },
-  {
-    id: "ORD-7307",
-    date: "2023-05-02",
-    items: 2,
-    total: 34.98,
-    status: "Processing",
-    customer: "Emily Davis",
-  },
-  {
-    id: "ORD-7306",
-    date: "2023-05-01",
-    items: 3,
-    total: 59.97,
-    status: "Shipped",
-    customer: "Daniel Wilson",
-  },
-];
+import { useAuthStore } from "@/store/authStore";
+import { useGetOrders } from "@/service/order";
+import { Role } from "@/types/auth";
 
 const OrdersPage = () => {
-  //   const { user } = useContext(AuthContext);
-  const user = { role: "admin" };
-  const isAdmin = user?.role === "admin";
+  const { user } = useAuthStore();
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterValue, setFilterValue] = useState("all");
-
+  const { data, isLoading } = useGetOrders();
   // Modal states
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -93,19 +35,25 @@ const OrdersPage = () => {
   const columnHelper = createColumnHelper<Order>();
 
   const columns = [
-    columnHelper.accessor("id", {
-      header: "Id",
-    }),
-    columnHelper.accessor("date", {
+    columnHelper.accessor("createdAt", {
       header: "Date",
+      cell: (info) => info.row.original.createdAt.split("T")[0],
     }),
-    columnHelper.accessor("customer", {
-      header: "Customer",
+    columnHelper.accessor("user.firstName", {
+      header: "User",
+      cell: (info) => (
+        <span>
+          {info.row.original.user?.firstName} {info.row.original.user?.lastName}
+        </span>
+      ),
     }),
-    columnHelper.accessor("items", {
+    columnHelper.accessor("products", {
       header: "Items",
+      cell: (info) => {
+        return <span>{info.row.original.products.length}</span>;
+      },
     }),
-    columnHelper.accessor("total", {
+    columnHelper.accessor("totalAmount", {
       header: "Total",
     }),
     columnHelper.accessor("status", {
@@ -126,7 +74,9 @@ const OrdersPage = () => {
         <TableActions
           onView={() => handleViewOrder(info.row.original)}
           onEdit={
-            isAdmin ? () => handleUpdateStatus(info.row.original) : undefined
+            user?.role == Role.ADMIN
+              ? () => handleUpdateStatus(info.row.original)
+              : undefined
           }
           actionType="order"
         />
@@ -135,7 +85,7 @@ const OrdersPage = () => {
   ];
 
   const table = useReactTable({
-    data: mockOrders,
+    data: data || [],
     columns,
     getCoreRowModel: getCoreRowModel(),
     onRowSelectionChange: (newRowSelection) => {
@@ -161,7 +111,7 @@ const OrdersPage = () => {
     }
   };
 
-  const filteredOrders = mockOrders.filter((order) => {
+  const filteredOrders = data?.filter((order) => {
     if (filterValue && filterValue !== "all" && order.status !== filterValue) {
       return false;
     }
@@ -170,17 +120,12 @@ const OrdersPage = () => {
       const query = searchQuery.toLowerCase();
       return (
         order.id.toLowerCase().includes(query) ||
-        order.customer.toLowerCase().includes(query)
+        order.user.firstName.toLowerCase().includes(query)
       );
     }
 
     return true;
   });
-
-  const paginatedOrders = filteredOrders.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
 
   const handleDownload = () => {
     console.log("Downloading orders data...");
@@ -209,7 +154,7 @@ const OrdersPage = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Orders</h1>
         <p className="text-muted-foreground">
-          {isAdmin
+          {user?.role == Role.ADMIN
             ? "Manage customer orders and track shipments"
             : "Track your orders and view order history"}
         </p>
@@ -227,13 +172,13 @@ const OrdersPage = () => {
 
           <TableComponent table={table} />
 
-          <TablePagination
+          {/* <TablePagination
             totalItems={filteredOrders.length}
             pageSize={pageSize}
             currentPage={currentPage}
             onPageChange={setCurrentPage}
             onPageSizeChange={setPageSize}
-          />
+          /> */}
         </CardContent>
       </Card>
 

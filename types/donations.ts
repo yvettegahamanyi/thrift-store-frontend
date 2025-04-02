@@ -1,5 +1,6 @@
 import { User } from "./auth";
 import { z } from "zod";
+import { Product } from "./product";
 
 export const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
 export const dateFormatRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -20,6 +21,7 @@ export type Donation = {
   status: DonationStatus;
   pickupAddress: string;
   donor: User;
+  products: Product[];
 };
 
 export enum DonationStatus {

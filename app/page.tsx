@@ -14,10 +14,11 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "@/hooks/use-toast";
-import { LoginPayload } from "@/types/auth";
+import { LoginPayload, LoginPayloadSchema } from "@/types/auth";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { useAuthStore } from "@/store/authStore";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function Home() {
   const router = useRouter();
@@ -27,7 +28,9 @@ export default function Home() {
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<LoginPayload>();
+  } = useForm<LoginPayload>({
+    resolver: zodResolver(LoginPayloadSchema),
+  });
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: any) => {
@@ -38,15 +41,14 @@ export default function Home() {
       setToken(response.data.access_token);
 
       toast({
-        title: "Login successful",
         description: "Welcome back to ThriftStore!",
+        variant: "success",
       });
       router.push("/dashboard");
     },
     onError(error: any) {
       console.log(error);
       toast({
-        title: "Login failed",
         description:
           error?.response?.data?.message || "An unexpected error occurred",
         variant: "destructive",
@@ -62,10 +64,12 @@ export default function Home() {
     <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-primary">
+          <CardTitle className="text-3xl font-extrabold text-primary">
             ThriftStore
           </CardTitle>
-          <p className="text-muted-foreground">Second life for your goods</p>
+          <p className="text-muted-foreground text-sm">
+            Second life for your goods
+          </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -77,7 +81,7 @@ export default function Home() {
                 placeholder="your@email.com"
                 value={watch("email")}
                 {...register("email")}
-                required
+                error={errors.email?.message}
               />
             </div>
             <div className="space-y-2">
@@ -87,7 +91,7 @@ export default function Home() {
                 type="password"
                 value={watch("password")}
                 {...register("password")}
-                required
+                error={errors.password?.message}
               />
             </div>
             <Button type="submit" className="w-full" disabled={isPending}>

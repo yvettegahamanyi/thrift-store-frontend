@@ -1,65 +1,127 @@
-
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "@/lib/axios";
+import { Product, productSchema, ProductType } from "@/types/product";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  product?: any;
+  product?: Product;
   mode: "create" | "edit";
 }
 
-const ProductModal = ({ isOpen, onClose, product, mode }: ProductModalProps) => {
+const ProductModal = ({
+  isOpen,
+  onClose,
+  product,
+  mode,
+}: ProductModalProps) => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    name: product?.name || "",
-    category: product?.category || "",
-    price: product?.price ? product.price.toString() : "",
-    status: product?.status || "In Stock",
-    description: product?.description || "",
+  const { id } = useParams() as { id: string };
+  const queryClient = useQueryClient();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<ProductType>({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: product?.name || "",
+      description: product?.description || "",
+      price: product?.price || 0,
+    },
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [id]: value
-    }));
-  };
-
-  const handleSelectChange = (id: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [id]: value
-    }));
-  };
-
-  const handleSubmit = () => {
-    // Validate form
-    if (!formData.name || !formData.category || !formData.price) {
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: ProductType) => {
+      return api.post(`/product/`, data);
+    },
+    onSuccess(response) {
+      queryClient.invalidateQueries({
+        queryKey: ["donation-id"],
+      });
       toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields",
+        title: "Product Created",
+        description: `${response.data.data.name} has been created successfully`,
+      });
+
+      onClose();
+    },
+    onError(error: any) {
+      console.log(error);
+      toast({
+        title: "Product Created",
+        description:
+          error?.response?.data?.message || "An unexpected error occurred",
         variant: "destructive",
       });
-      return;
+      onClose();
+    },
+  });
+
+  const { mutate: updateMutate, isPending: isUpdatePending } = useMutation({
+    mutationFn: (data: ProductType) => {
+      return api.put(`/product/${product?.id}`, data);
+    },
+    onSuccess(response) {
+      queryClient.invalidateQueries({
+        queryKey: ["product-id"],
+      });
+      toast({
+        title: "Product Updated",
+        description: `${response.data.data.name} has been updated successfully`,
+      });
+
+      onClose();
+    },
+    onError(error: any) {
+      console.log(error);
+      toast({
+        title: "Product Updated",
+        description:
+          error?.response?.data?.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+      onClose();
+    },
+  });
+
+  console.log(errors);
+  const onSubmit = (data: ProductType) => {
+    if (mode === "create") {
+      mutate({
+        ...data,
+        donationId: id,
+      });
+    } else {
+      const filteredData = Object.fromEntries(
+        Object.entries(data).filter(([_, value]) => value !== "" && value !== 0)
+      );
+      updateMutate(filteredData as ProductType);
     }
-    
-    // In a real app, this would create/update the product in the database
-    console.log(`${mode === "create" ? "Creating" : "Updating"} product:`, formData);
-    
-    toast({
-      title: mode === "create" ? "Product Created" : "Product Updated",
-      description: `${formData.name} has been ${mode === "create" ? "created" : "updated"} successfully`,
-    });
-    
-    onClose();
   };
 
   return (
@@ -70,99 +132,65 @@ const ProductModal = ({ isOpen, onClose, product, mode }: ProductModalProps) => 
             {mode === "create" ? "Add New Product" : "Edit Product"}
           </DialogTitle>
         </DialogHeader>
-        
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Product Name <span className="text-red-500">*</span></Label>
+              <Label htmlFor="name">
+                Product Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="name"
-                value={formData.name}
-                onChange={handleChange}
+                value={watch("name")}
+                {...register("name")}
                 placeholder="Product name"
               />
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="category">Category <span className="text-red-500">*</span></Label>
-              <Select 
-                value={formData.category} 
-                onValueChange={(value) => handleSelectChange("category", value)}
-              >
-                <SelectTrigger id="category">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Jacket">Jacket</SelectItem>
-                  <SelectItem value="Sweater">Sweater</SelectItem>
-                  <SelectItem value="Dress">Dress</SelectItem>
-                  <SelectItem value="Shirt">Shirt</SelectItem>
-                  <SelectItem value="Accessories">Accessories</SelectItem>
-                  <SelectItem value="Coat">Coat</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price">Price ($) <span className="text-red-500">*</span></Label>
+              <Label htmlFor="price">
+                Price (Rwf) <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="price"
-                type="number"
                 step="0.01"
                 min="0"
-                value={formData.price}
-                onChange={handleChange}
+                {...register("price", {
+                  valueAsNumber: true,
+                })}
                 placeholder="0.00"
               />
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select 
-                value={formData.status} 
-                onValueChange={(value) => handleSelectChange("status", value)}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="In Stock">In Stock</SelectItem>
-                  <SelectItem value="Low Stock">Low Stock</SelectItem>
-                  <SelectItem value="Out of Stock">Out of Stock</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={watch("description")}
+                {...register("description")}
+                placeholder="Product description"
+                rows={4}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Product Image</Label>
+              <div className="border-2 border-dashed rounded-md p-6 text-center cursor-pointer hover:bg-muted/50">
+                <p className="text-sm text-muted-foreground">
+                  Drag and drop an image or click to browse
+                </p>
+              </div>
             </div>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Product description"
-              rows={4}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Product Image</Label>
-            <div className="border-2 border-dashed rounded-md p-6 text-center cursor-pointer hover:bg-muted/50">
-              <p className="text-sm text-muted-foreground">
-                Drag and drop an image or click to browse
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSubmit}>
-            {mode === "create" ? "Create Product" : "Update Product"}
-          </Button>
-        </DialogFooter>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button>
+              {mode === "create" ? "Create Product" : "Update Product"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

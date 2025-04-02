@@ -11,9 +11,9 @@ export const useGetDonations = () => {
 };
 
 export const useGetDonationById = (id: string) => {
-  return useQuery({
+  return useQuery<Donation, Error>({
     queryKey: ["donation-id"],
     queryFn: async () =>
-      await api.get(`/donation/${id}`).then((res) => res.data),
+      await api.get(`/donation/${id}`).then((res) => res.data.data),
   });
 };

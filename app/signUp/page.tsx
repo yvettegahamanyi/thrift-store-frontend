@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Role, signUpPayload } from "@/types/auth";
+import { Role, signUpPayload, SignUpPayloadSchema } from "@/types/auth";
 import {
   Select,
   SelectContent,
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/axios";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function Login() {
   const router = useRouter();
@@ -33,7 +34,9 @@ export default function Login() {
     watch,
     setValue,
     formState: { errors },
-  } = useForm<signUpPayload>();
+  } = useForm<signUpPayload>({
+    resolver: zodResolver(SignUpPayloadSchema),
+  });
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: any) => {
@@ -41,22 +44,22 @@ export default function Login() {
     },
     onSuccess(response) {
       toast({
-        title: "Account created",
         description:
           "Welcome to ThriftHub! Your account has been created successfully.",
+        variant: "success",
       });
       router.push("/");
     },
     onError(error: any) {
       console.log(error);
       toast({
-        title: "Signup failed",
         description:
           error?.response?.data?.message || "An unexpected error occurred",
         variant: "destructive",
       });
     },
   });
+  console.log(errors);
 
   const onSubmit: SubmitHandler<signUpPayload> = (data) => {
     mutate(data);
@@ -81,7 +84,7 @@ export default function Login() {
                   placeholder="John"
                   value={watch("firstName")}
                   {...register("firstName")}
-                  required
+                  error={errors.firstName?.message}
                   className="rounded-md"
                 />
               </div>
@@ -92,7 +95,7 @@ export default function Login() {
                   placeholder="Doe"
                   value={watch("lastName")}
                   {...register("lastName")}
-                  required
+                  error={errors.lastName?.message}
                   className="rounded-md"
                 />
               </div>
@@ -104,7 +107,7 @@ export default function Login() {
                   placeholder="your@email.com"
                   value={watch("email")}
                   {...register("email")}
-                  required
+                  error={errors.email?.message}
                   className="rounded-md"
                 />
               </div>
@@ -115,7 +118,7 @@ export default function Login() {
                   type="password"
                   value={watch("password")}
                   {...register("password")}
-                  required
+                  error={errors.password?.message}
                   className="rounded-md"
                 />
               </div>
@@ -126,7 +129,7 @@ export default function Login() {
                   type="password"
                   value={watch("confirmPassword")}
                   {...register("confirmPassword")}
-                  required
+                  error={errors.confirmPassword?.message}
                   className="rounded-md"
                 />
               </div>
@@ -148,6 +151,9 @@ export default function Login() {
                   </SelectContent>
                 </Select>
               </div>
+              {errors.role?.message && (
+                <p className="text-red-500 text-sm">{errors.role.message}</p>
+              )}
             </div>
             <Button
               type="submit"

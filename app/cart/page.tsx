@@ -10,45 +10,68 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
-import CheckoutPhoneModal from "@/components/modals/CheckoutPhoneModal";
-import DonationApprovalModal from "@/components/modals/DonationApprovalModal";
+import { useGetActiveUserCart } from "@/service/product";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "@/lib/axios";
+import { toast } from "@/hooks/use-toast";
+import CheckoutModal from "@/components/modals/CheckoutModal";
 
 const CartPage = () => {
-  //   const navigate = useNavigate();
   const router = useRouter();
   const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
-  const [cartItems, setCartItems] = useState([
-    { id: 1, name: "Vintage Denim Jacket", price: 29.99, quantity: 1 },
-    { id: 2, name: "Cotton Sweater", price: 24.99, quantity: 1 },
-    { id: 3, name: "Leather Belt", price: 12.99, quantity: 1 },
-  ]);
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useGetActiveUserCart();
 
-  const updateQuantity = (id: number, quantity: number) => {
-    if (quantity < 1) return;
-    setCartItems(
-      cartItems.map((item) => (item.id === id ? { ...item, quantity } : item))
-    );
-  };
+  const { mutate: removeItem } = useMutation({
+    mutationFn: (productId: string) => {
+      return api.put(`/cart/removeProduct/${data?.id}`, { productId });
+    },
+    onSuccess(response) {
+      queryClient.invalidateQueries({
+        queryKey: ["user-cart"],
+      });
+      toast({
+        title: "Product removed",
+        description: `${
+          response.data?.data?.name || "Item"
+        } has been removed from the cart`,
+      });
+    },
+    onError(error: any) {
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    },
+  });
 
-  const removeItem = (id: number) => {
-    setCartItems(cartItems.filter((item) => item.id !== id));
-  };
-
-  const subtotal = cartItems.reduce(
+  const subtotal = data?.products.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
 
-  const shipping = 4.99;
-  const total = subtotal + shipping;
+  const shipping = 1000;
+  const total = subtotal! + shipping;
 
   const handleCheckout = () => {
     setIsPhoneModalOpen(true);
   };
 
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-screen">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  console.log(data);
   return (
     <DashboardLayout>
       <div className="mb-8">
@@ -60,10 +83,10 @@ const CartPage = () => {
         <div className="md:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Cart Items ({cartItems.length})</CardTitle>
+              <CardTitle>Cart Items ({data?.products.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              {cartItems.length === 0 ? (
+              {!data ? (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">
                     Your cart is empty
@@ -74,7 +97,7 @@ const CartPage = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {cartItems.map((item) => (
+                  {data?.products.map((item) => (
                     <div
                       key={item.id}
                       className="flex items-center justify-between border-b pb-4"
@@ -84,43 +107,11 @@ const CartPage = () => {
                         <div>
                           <p className="font-medium">{item.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            ${item.price.toFixed(2)}
+                            {item.price}Rwf
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-4">
-                        <div className="flex items-center">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8 rounded-r-none"
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity - 1)
-                            }
-                          >
-                            -
-                          </Button>
-                          <Input
-                            className="h-8 w-12 rounded-none text-center"
-                            value={item.quantity}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value);
-                              if (!isNaN(value)) {
-                                updateQuantity(item.id, value);
-                              }
-                            }}
-                          />
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8 rounded-l-none"
-                            onClick={() =>
-                              updateQuantity(item.id, item.quantity + 1)
-                            }
-                          >
-                            +
-                          </Button>
-                        </div>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -134,7 +125,7 @@ const CartPage = () => {
                 </div>
               )}
             </CardContent>
-            {cartItems.length > 0 && (
+            {data?.products?.length! > 0 && (
               <CardFooter className="justify-end">
                 <Button
                   variant="outline"
@@ -147,7 +138,7 @@ const CartPage = () => {
           </Card>
         </div>
 
-        {cartItems.length > 0 && (
+        {data?.products?.length! > 0 && (
           <div>
             <Card>
               <CardHeader>
@@ -157,15 +148,15 @@ const CartPage = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>{subtotal?.toFixed(2)}Rwf</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
-                    <span>${shipping.toFixed(2)}</span>
+                    <span>{shipping.toFixed(2)}Rwf</span>
                   </div>
                   <div className="border-t pt-4 flex justify-between font-medium">
                     <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>{total.toFixed(2)}Rwf</span>
                   </div>
                 </div>
               </CardContent>
@@ -178,15 +169,10 @@ const CartPage = () => {
           </div>
         )}
       </div>
-      <CheckoutPhoneModal
+      <CheckoutModal
+        cart={data!}
         isOpen={isPhoneModalOpen}
         onClose={() => setIsPhoneModalOpen(false)}
-      />
-      <DonationApprovalModal
-        isOpen={isPhoneModalOpen}
-        onClose={() => setIsPhoneModalOpen(false)}
-        donation={{}}
-        type={"approve"}
       />
     </DashboardLayout>
   );
