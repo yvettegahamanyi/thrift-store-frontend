@@ -45,7 +45,7 @@ export default function Login() {
     onSuccess(response) {
       toast({
         description:
-          "Welcome to ThriftHub! Your account has been created successfully.",
+          "Welcome to ThriftStore! Your account has been created successfully.",
         variant: "success",
       });
       router.push("/");
@@ -69,7 +69,7 @@ export default function Login() {
       <Card className="w-full max-w-lg shadow-lg rounded-lg border border-muted">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-extrabold text-primary">
-            Join ThriftHub
+            Join ThriftStore
           </CardTitle>
           <p className="text-muted-foreground text-sm">Create your account</p>
         </CardHeader>
