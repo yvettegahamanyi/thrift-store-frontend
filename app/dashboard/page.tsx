@@ -11,52 +11,48 @@ import {
 import DashboardLayout from "@/components/layouts/DashboardLayout";
 import Link from "next/link";
 import { useGetCurrentUser } from "@/service/auth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { Role } from "@/types/auth";
+import DonationModal from "@/components/modals/DonationModal";
+import { useGetProducts } from "@/service/product";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "@/lib/axios";
+import { toast } from "@/hooks/use-toast";
 
 const CustomerDashboard = () => {
-  const mockProducts = [
-    {
-      id: 1,
-      name: "Vintage Denim Jacket",
-      category: "Jacket",
-      price: 29.99,
+  const { data, isLoading } = useGetProducts();
+  const queryClient = useQueryClient();
+  const { mutate, isPending } = useMutation({
+    mutationFn: (productId: string) => {
+      return api.post(`/cart/`, { productId });
     },
-    {
-      id: 2,
-      name: "Cotton Sweater",
-      category: "Sweater",
-      price: 24.99,
+    onSuccess(response) {
+      queryClient.invalidateQueries({
+        queryKey: ["products"],
+      });
+      toast({
+        title: "Product cart Created",
+        description: `${response.data.data.name} has been added to cart`,
+      });
     },
-    {
-      id: 3,
-      name: "Summer Dress",
-      category: "Dress",
-      price: 19.99,
+    onError(error: any) {
+      toast({
+        title: "Product cart created",
+        description:
+          error?.response?.data?.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
     },
-    {
-      id: 4,
-      name: "Formal Shirt",
-      category: "Shirt",
-      price: 15.99,
-    },
-    {
-      id: 5,
-      name: "Leather Belt",
-      category: "Accessories",
-      price: 12.99,
-    },
-  ];
-
+  });
   return (
     <>
       <div className="relative mb-8 overflow-hidden rounded-lg">
         <div className="bg-secondary/30 p-8">
           <div className="grid gap-4">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            {/* <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
               Up to 15% Off for Women
-            </h1>
+            </h1> */}
             <div className="max-w-[600px]">
               <h2 className="text-3xl font-semibold tracking-tight">
                 Shop Affordable Fashion for Daily Life!
@@ -67,7 +63,9 @@ const CustomerDashboard = () => {
               </p>
             </div>
             <div>
-              <Button className="mt-4">Shop now</Button>
+              <Link href="/products">
+                <Button className="mt-4">Shop now</Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -76,7 +74,7 @@ const CustomerDashboard = () => {
       <h2 className="mt-10 text-2xl font-semibold">New Arrival</h2>
       <div className="mt-6 flex flex-col">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
-          {mockProducts.map((product) => (
+          {data?.map((product) => (
             <Card key={product.id}>
               <div className="aspect-[4/3] w-full bg-muted"></div>
               <CardHeader className="p-4 pb-2">
@@ -85,13 +83,15 @@ const CustomerDashboard = () => {
               <CardContent className="p-4 pt-0">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">
-                    {product.category}
+                    {product.description}
                   </span>
                   <span className="font-medium">{product.price} RWF</span>
                 </div>
               </CardContent>
               <CardFooter className="p-4 pt-0 flex justify-between">
-                <Button className="w-full">Add to Cart</Button>
+                <Button className="w-full" onClick={() => mutate(product.id)}>
+                  Add to Cart
+                </Button>
               </CardFooter>
             </Card>
           ))}
@@ -101,57 +101,69 @@ const CustomerDashboard = () => {
   );
 };
 
-const DonorDashboard = () => (
-  <>
-    <div className="mb-8">
-      <h1 className="text-3xl font-bold">Donation Dashboard</h1>
-      <p className="text-muted-foreground">
-        Track your impact and manage your donations
-      </p>
-    </div>
+const DonorDashboard = () => {
+  const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
+  return (
+    <>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Donation Dashboard</h1>
+        <p className="text-muted-foreground">
+          Track your impact and manage your donations
+        </p>
+      </div>
 
-    <div className="grid gap-6 md:grid-cols-3">
-      <Card>
-        <CardHeader>
-          <CardTitle>Total Donations</CardTitle>
-          <CardDescription>
-            Your contribution makes a difference
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-4xl font-bold">12</p>
-          <p className="text-sm text-muted-foreground">Items donated to date</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Approved Items</CardTitle>
-          <CardDescription>Items processed and listed</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-4xl font-bold">9</p>
-          <p className="text-sm text-muted-foreground">83% approval rate</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Environmental Impact</CardTitle>
-          <CardDescription>Carbon footprint reduced</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-4xl font-bold">45kg</p>
-          <p className="text-sm text-muted-foreground">CO₂ saved by reusing</p>
-        </CardContent>
-      </Card>
-    </div>
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Total Donations</CardTitle>
+            <CardDescription>
+              Your contribution makes a difference
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold">12</p>
+            <p className="text-sm text-muted-foreground">
+              Items donated to date
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Approved Items</CardTitle>
+            <CardDescription>Items processed and listed</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold">9</p>
+            <p className="text-sm text-muted-foreground">83% approval rate</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Environmental Impact</CardTitle>
+            <CardDescription>Carbon footprint reduced</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold">45kg</p>
+            <p className="text-sm text-muted-foreground">
+              CO₂ saved by reusing
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-    <div className="mt-8">
-      <Link href="/donations/create">
-        <Button>Donate New Item</Button>
-      </Link>
-    </div>
-  </>
-);
+      <div className="mt-8">
+        <Button onClick={() => setIsDonationModalOpen(true)}>
+          Donate New Item
+        </Button>
+      </div>
+      <DonationModal
+        isOpen={isDonationModalOpen}
+        onClose={() => setIsDonationModalOpen(false)}
+        mode="create"
+      />
+    </>
+  );
+};
 
 const AdminDashboard = () => (
   <>
@@ -275,7 +287,7 @@ const AdminDashboard = () => (
 const Dashboard = () => {
   const { data, isLoading } = useGetCurrentUser();
   const { setUser, user } = useAuthStore();
-  // console.log(user);
+
   useEffect(() => {
     setUser(data);
   }, [data]);
@@ -283,8 +295,8 @@ const Dashboard = () => {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-full">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-primary"></div>
+        <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+          <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
         </div>
       </DashboardLayout>
     );

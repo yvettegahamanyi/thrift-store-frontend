@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Role, signUpPayload, SignUpPayloadSchema } from "@/types/auth";
+import { Role, SignUpPayload, SignUpPayloadSchema } from "@/types/auth";
 import {
   Select,
   SelectContent,
@@ -34,7 +34,7 @@ export default function Login() {
     watch,
     setValue,
     formState: { errors },
-  } = useForm<signUpPayload>({
+  } = useForm<SignUpPayload>({
     resolver: zodResolver(SignUpPayloadSchema),
   });
 
@@ -59,9 +59,8 @@ export default function Login() {
       });
     },
   });
-  console.log(errors);
 
-  const onSubmit: SubmitHandler<signUpPayload> = (data) => {
+  const onSubmit: SubmitHandler<SignUpPayload> = (data) => {
     mutate(data);
   };
 
@@ -134,7 +133,7 @@ export default function Login() {
                 />
               </div>
               <div className="space-y-3 col-span-full">
-                <Label htmlFor="role">I am a</Label>
+                <Label htmlFor="role">Role</Label>
                 <Select
                   value={watch("role")}
                   onValueChange={(value: string) =>

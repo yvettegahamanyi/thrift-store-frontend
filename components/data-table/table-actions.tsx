@@ -1,13 +1,21 @@
-
-import { MoreVertical, Download, Edit, Eye, Trash, CheckCircle, XCircle } from "lucide-react";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  MoreVertical,
+  Download,
+  Edit,
+  Eye,
+  Trash,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { DonationStatus } from "@/types/donations";
 
 interface TableActionsProps {
   onEdit?: () => void;
@@ -19,7 +27,8 @@ interface TableActionsProps {
   onReject?: () => void;
   isActive?: boolean;
   isPending?: boolean;
-  actionType?: 'user' | 'order' | 'donation' | 'product';
+  status?: DonationStatus;
+  actionType?: "user" | "order" | "donation" | "product";
 }
 
 export function TableActions({
@@ -32,8 +41,10 @@ export function TableActions({
   onReject,
   isActive,
   isPending,
-  actionType = 'user'
+  status,
+  actionType = "user",
 }: TableActionsProps) {
+  console.log(status);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -49,7 +60,7 @@ export function TableActions({
             View Details
           </DropdownMenuItem>
         )}
-        
+
         {onEdit && (
           <DropdownMenuItem onClick={onEdit}>
             <Edit className="mr-2 h-4 w-4" />
@@ -59,7 +70,7 @@ export function TableActions({
 
         {(onActivate || onDeactivate) && isActive !== undefined && (
           <>
-            <DropdownMenuSeparator />
+            {/* <DropdownMenuSeparator /> */}
             {isActive ? (
               <DropdownMenuItem onClick={onDeactivate} className="text-red-600">
                 <XCircle className="mr-2 h-4 w-4" />
@@ -74,23 +85,32 @@ export function TableActions({
           </>
         )}
 
-        {(onApprove || onReject) && isPending && (
+        {(onApprove || onReject) && (
           <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onApprove} className="text-green-600">
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Approve
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onReject} className="text-red-600">
-              <XCircle className="mr-2 h-4 w-4" />
-              Reject
-            </DropdownMenuItem>
+            {/* <DropdownMenuSeparator /> */}
+            {status === DonationStatus.PENDING ||
+              (status === DonationStatus.REJECTED && (
+                <DropdownMenuItem
+                  onClick={onApprove}
+                  className="text-green-600"
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Approve
+                </DropdownMenuItem>
+              ))}
+            {status === DonationStatus.PENDING ||
+              (status === DonationStatus.APPROVED && (
+                <DropdownMenuItem onClick={onReject} className="text-red-600">
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Reject
+                </DropdownMenuItem>
+              ))}
           </>
         )}
 
         {onDelete && (
           <>
-            <DropdownMenuSeparator />
+            {/* <DropdownMenuSeparator /> */}
             <DropdownMenuItem onClick={onDelete} className="text-red-600">
               <Trash className="mr-2 h-4 w-4" />
               Delete

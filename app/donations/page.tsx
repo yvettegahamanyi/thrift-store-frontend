@@ -87,7 +87,7 @@ const DonationsPage = () => {
             setActionType("reject");
             setIsApproveRejectOpen(true);
           }}
-          isPending={info.row.original.status === DonationStatus.PENDING}
+          status={info.row.original.status}
           actionType="donation"
         />
       ),
@@ -156,10 +156,7 @@ const DonationsPage = () => {
       <Card>
         <CardContent className="p-6">
           <TableToolbar
-            filterOptions={filterOptions}
-            onFilterChange={setFilterValue}
             onSearch={setSearchQuery}
-            onDownload={handleDownload}
             placeholderText="Search donations..."
           />
 

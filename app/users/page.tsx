@@ -153,10 +153,7 @@ const UsersPage = () => {
       <Card>
         <CardContent className="p-6">
           <TableToolbar
-            filterOptions={filterOptions}
-            onFilterChange={setFilterValue}
             onSearch={setSearchQuery}
-            onDownload={handleDownload}
             placeholderText="Search users..."
           />
           <TableComponent table={table} />

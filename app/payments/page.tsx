@@ -214,22 +214,19 @@ const PaymentsPage = () => {
       <Card>
         <CardContent className="p-6">
           <TableToolbar
-            filterOptions={filterOptions}
-            onFilterChange={setFilterValue}
             onSearch={setSearchQuery}
-            onDownload={handleDownload}
             placeholderText="Search payments..."
           />
 
           <TableComponent table={table} />
 
-          <TablePagination
+          {/* <TablePagination
             totalItems={filteredPayments.length}
             pageSize={pageSize}
             currentPage={currentPage}
             onPageChange={setCurrentPage}
             onPageSizeChange={setPageSize}
-          />
+          /> */}
         </CardContent>
       </Card>
     </DashboardLayout>

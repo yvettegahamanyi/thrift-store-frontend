@@ -76,7 +76,7 @@ export type User = {
   lastName: string;
   email: string;
   role: Role;
-  addaddress: string;
+  address: string;
   phoneNumber: string;
   createdAt: string;
   status: UserStatus;

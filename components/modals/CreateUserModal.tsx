@@ -49,33 +49,32 @@ const CreateUserModal = ({ isOpen, onClose, user, mode }: UserModalProps) => {
       email: user?.email || "",
       phoneNumber: user?.phoneNumber || "",
       role: user?.role || "customer",
+      status: user?.status || "ACTIVE",
     },
   });
 
-  const { mutate, isPending } = useMutation({
+  const { mutate } = useMutation({
     mutationFn: (data: any) => {
-      return api.post(`/user/${user.id}`, data);
+      return api.post(`/user/create`, data);
     },
     onSuccess(response) {
-      // toast({
-      //   title: type === "activate" ? "User Activated" : "User Deactivated",
-      //   description: `${user.firstName} has been ${
-      //     type === "activate" ? "activated" : "deactivated"
-      //   }.`,
-      // });
       queryClient.invalidateQueries({
         queryKey: ["users"],
+      });
+      toast({
+        description: `${response.data.firstName || "User"} has been ${
+          mode === "create" ? "Created" : "Edited"
+        }.`,
+        variant: "success",
       });
       onClose();
     },
     onError(error: any) {
-      console.log(error);
-      // toast({
-      //   title: type == "activate" ? "Activate failed" : "Deactivate failed",
-      //   description:
-      //     error?.response?.data?.message || "An unexpected error occurred",
-      //   variant: "destructive",
-      // });
+      toast({
+        description:
+          error?.response?.data?.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
     },
   });
 
@@ -88,6 +87,8 @@ const CreateUserModal = ({ isOpen, onClose, user, mode }: UserModalProps) => {
     mutate(data);
     onClose();
   };
+
+  console.log(watch("status") === "ACTIVE");
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -121,7 +122,7 @@ const CreateUserModal = ({ isOpen, onClose, user, mode }: UserModalProps) => {
                 value={watch("lastName")}
                 {...register("lastName")}
                 placeholder="Last name"
-                error={errors.firstName?.message}
+                error={errors.lastName?.message}
               />
             </div>
 
@@ -135,7 +136,7 @@ const CreateUserModal = ({ isOpen, onClose, user, mode }: UserModalProps) => {
                 value={watch("email")}
                 {...register("email")}
                 placeholder="email@example.com"
-                error={errors.firstName?.message}
+                error={errors.email?.message}
               />
             </div>
 
@@ -150,7 +151,7 @@ const CreateUserModal = ({ isOpen, onClose, user, mode }: UserModalProps) => {
                   value={watch("password")}
                   {...register("password")}
                   placeholder="••••••••"
-                  error={errors.firstName?.message}
+                  error={errors.password?.message}
                 />
               </div>
             )}
@@ -162,12 +163,22 @@ const CreateUserModal = ({ isOpen, onClose, user, mode }: UserModalProps) => {
                 value={watch("phoneNumber")}
                 {...register("phoneNumber")}
                 placeholder="(123) 456-7890"
-                error={errors.firstName?.message}
+                error={errors.phoneNumber?.message}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="address">Address</Label>
+              <Input
+                id="address"
+                value={watch("address")}
+                {...register("address")}
+                placeholder="123 Main St, City, Country"
+                error={errors.address?.message}
               />
             </div>
 
             <div className="space-y-3 col-span-full">
-              <Label htmlFor="role">I am a</Label>
+              <Label htmlFor="role">Role</Label>
               <Select
                 value={watch("role")}
                 onValueChange={(value: string) =>
@@ -187,11 +198,11 @@ const CreateUserModal = ({ isOpen, onClose, user, mode }: UserModalProps) => {
 
             <div className="flex items-center justify-between">
               <Label htmlFor="active" className="cursor-pointer">
-                Active Status
+                Status
               </Label>
               <Switch
                 id="active"
-                checked={user?.status === "ACTIVE"}
+                checked={watch("status") === "ACTIVE"}
                 onCheckedChange={handleSwitchChange}
               />
             </div>

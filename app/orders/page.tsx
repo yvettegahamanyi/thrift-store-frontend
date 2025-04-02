@@ -111,6 +111,15 @@ const OrdersPage = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+          <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
   const filteredOrders = data?.filter((order) => {
     if (filterValue && filterValue !== "all" && order.status !== filterValue) {
       return false;
@@ -163,10 +172,7 @@ const OrdersPage = () => {
       <Card>
         <CardContent className="p-6">
           <TableToolbar
-            filterOptions={filterOptions}
-            onFilterChange={setFilterValue}
             onSearch={setSearchQuery}
-            onDownload={handleDownload}
             placeholderText="Search orders..."
           />
 

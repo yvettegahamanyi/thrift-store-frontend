@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import { Role } from "@/types/auth";
 
 const DashboardHeader = () => {
   const { user } = useAuthStore();
@@ -19,11 +20,14 @@ const DashboardHeader = () => {
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-end border-b bg-background px-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/cart">
-            <ShoppingCart className="h-5 w-5" />
-          </Link>
-        </Button>
+        {user?.role === Role.CUSTOMER && (
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/cart">
+              <ShoppingCart className="h-5 w-5" />
+            </Link>
+          </Button>
+        )}
+
         <Button variant="ghost" size="icon" asChild>
           <Link href="/notifications">
             <Bell className="h-5 w-5" />

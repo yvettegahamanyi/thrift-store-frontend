@@ -153,9 +153,6 @@ export default function DonationDetailsPage() {
                   </h3>
                   <p className="text-lg font-semibold">{data?.title}</p>
                 </div>
-              </div>
-
-              <div className="space-y-4">
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
                     Date Received
@@ -164,15 +161,32 @@ export default function DonationDetailsPage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
-                    Donor
-                  </h3>
-                  <p>{/* {data.donor.firstName} {data.donor.lastName} */}</p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">
                     Description
                   </h3>
                   <p className="text-sm">{data?.description}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Donor Name
+                  </h3>
+                  <p>
+                    {data.donor.firstName} {data.donor.lastName}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Donor phone number
+                  </h3>
+                  <p>{data.donor.phoneNumber ?? "-"}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">
+                    Donor phone number
+                  </h3>
+                  <p>{data.donor.email}</p>
                 </div>
               </div>
             </div>

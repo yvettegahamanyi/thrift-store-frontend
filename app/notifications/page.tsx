@@ -112,16 +112,16 @@ const Notifications = () => {
       <div className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Notifications</h1>
-          <p className="text-muted-foreground">
+          {/* <p className="text-muted-foreground">
             Stay updated with your orders and announcements
-          </p>
+          </p> */}
         </div>
         <Button variant="outline" onClick={markAllAsRead}>
           Mark All as Read
         </Button>
       </div>
 
-      <Card>
+      {/* <Card>
         <CardContent className="p-6">
           <div className="space-y-4">
             {notifications.length > 0 ? (
@@ -191,7 +191,7 @@ const Notifications = () => {
             )}
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </DashboardLayout>
   );
 };
