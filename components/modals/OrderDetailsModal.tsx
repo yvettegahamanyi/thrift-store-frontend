@@ -76,7 +76,7 @@ const OrderDetailsModal = ({
               <h3 className="text-sm font-medium text-muted-foreground">
                 Total
               </h3>
-              <p>${order.totalAmount}</p>
+              <p>{order.totalAmount}RWF</p>
             </div>
           </div>
 
@@ -96,7 +96,7 @@ const OrderDetailsModal = ({
                   {order.products.map((item) => (
                     <tr key={item.id} className="border-t">
                       <td className="p-2">{item.name}</td>
-                      <td className="text-right p-2">${item.price}</td>
+                      <td className="text-right p-2">{item.price}RWF</td>
                     </tr>
                   ))}
                 </tbody>

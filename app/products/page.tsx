@@ -110,7 +110,7 @@ const ProductsPage = () => {
                 <span className="text-muted-foreground">
                   {product.description}
                 </span>
-                <span className="font-medium">${product.price}</span>
+                <span className="font-medium">{product.price}RWF</span>
               </div>
             </CardContent>
             <CardFooter className="p-4 pt-0 flex justify-between">
